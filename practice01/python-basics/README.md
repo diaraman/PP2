@@ -4,6 +4,9 @@ This repository contains Python example codes covering fundamental topics from W
 
 ## Topics Covered
 
+### 1. Hello World
+
+### 7. Lists
 - Get started
 - Syntax
 - Comment
