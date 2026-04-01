@@ -1,4 +1,4 @@
--- Practice 8: PostgreSQL functions for PhoneBook.
+-- Practice 8: PostgreSQL functions for PhoneBook (search/pagination/count).
 -- Functions are called with SELECT and return data.
 
 -- Scalar-returning function (RETURNS INT)

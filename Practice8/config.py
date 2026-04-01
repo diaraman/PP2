@@ -1,4 +1,4 @@
-# PostgreSQL connection settings used by connect.py
+# Practice 8: PostgreSQL connection settings used by connect.py
 DB_CONFIG = {
     "host": "localhost",
     "database": "phonebook_db",

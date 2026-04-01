@@ -219,7 +219,7 @@ def get_total_count():
 
 
 def menu():
-    # Simple CLI to demonstrate each requirement from the practice.
+    # Simple CLI runner for all Practice 8 requirements.
     while True:
         print("\n--- PRACTICE 8 PHONEBOOK ---")
         print("1. Setup table/functions/procedures")

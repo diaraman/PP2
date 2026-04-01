@@ -1,4 +1,4 @@
--- Practice 8: PostgreSQL stored procedures for PhoneBook.
+-- Practice 8: PostgreSQL stored procedures for PhoneBook (upsert/bulk/delete).
 -- Procedures are called with CALL and mainly perform actions (insert/update/delete).
 
 -- Upsert one user by name + phone.
