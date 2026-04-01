@@ -20,7 +20,7 @@ BEGIN
         RAISE EXCEPTION 'Name cannot be empty';
     END IF;
 
-    IF p_phone IS NULL OR p_phone !~ '^\\+?[0-9]{10,15}$' THEN
+    IF p_phone IS NULL OR p_phone !~ '^\+?[0-9]{10,15}$' THEN
         RAISE EXCEPTION 'Invalid phone format: %', p_phone;
     END IF;
 
@@ -87,7 +87,7 @@ BEGIN
                     'reason', 'empty_name'
                 )
             );
-        ELSIF v_phone !~ '^\\+?[0-9]{10,15}$' THEN
+        ELSIF v_phone !~ '^\+?[0-9]{10,15}$' THEN
             p_invalid := p_invalid || jsonb_build_array(
                 jsonb_build_object(
                     'index', i,

@@ -33,10 +33,10 @@ BEGIN
     RETURN QUERY
     SELECT
         u.id,
-        u.username,
-        u.first_name,
-        u.last_name,
-        u.phone
+        u.username::TEXT,
+        u.first_name::TEXT,
+        u.last_name::TEXT,
+        u.phone::TEXT
     FROM phonebook_users AS u
     WHERE u.first_name ILIKE '%' || p_pattern || '%'
        OR u.last_name ILIKE '%' || p_pattern || '%'
@@ -73,10 +73,10 @@ BEGIN
     RETURN QUERY
     SELECT
         u.id,
-        u.username,
-        u.first_name,
-        u.last_name,
-        u.phone
+        u.username::TEXT,
+        u.first_name::TEXT,
+        u.last_name::TEXT,
+        u.phone::TEXT
     FROM phonebook_users AS u
     ORDER BY u.id
     LIMIT p_limit
