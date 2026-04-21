@@ -1,125 +1,174 @@
-import random
-import sys
-import pygame
+from pathlib import Path
+import pygame                                # game library for graphics and input
+import random                                # used to pick random positions for enemy and coin
 
-from race import Player, Enemy, Coin, SCREEN_W, SCREEN_H, ROAD_LEFT, ROAD_RIGHT
+pygame.init()                                # start all pygame modules (required before using them)
 
+WIDTH = 500                                  # window width in pixels
+HEIGHT = 600                                 # window height in pixels
+screen = pygame.display.set_mode((WIDTH, HEIGHT))   # create the game window
+pygame.display.set_caption("Racer")          # set the title shown on the window
 
-pygame.init()
-pygame.display.set_caption("Racer")
+# colors in (Red, Green, Blue) format, each value from 0 to 255
+GRAY = (80, 80, 80)                          # color of the road
+WHITE = (255, 255, 255)                      # color of lane lines and text
+GREEN = (30, 150, 30)                        # color of the grass on the sides
+BLUE = (30, 100, 220)                        # color of the player car
+RED = (220, 30, 30)                          # color of the enemy car
+YELLOW = (240, 200, 40)                      # color of the coin
+BLACK = (0, 0, 0)                            # color used for the car windows
 
-screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-clock = pygame.time.Clock()
+clock = pygame.time.Clock()                  # controls how fast the game loop runs
+FPS = 60                                     # target frames per second
 
-hud_font = pygame.font.Font(None, 42)
-small_font = pygame.font.Font(None, 30)
+font = pygame.font.SysFont("Arial", 24, bold=True)   # font for showing the coin counter
 
-player_group = pygame.sprite.GroupSingle(Player())
-enemy_group = pygame.sprite.Group()
-coin_group = pygame.sprite.Group()
+# player car settings
+CAR_W, CAR_H = 50, 80                        # width and height of the player car
 
-score = 0
-coins_collected = 0
-running = True
-
-SPAWN_ENEMY = pygame.USEREVENT + 1
-SPAWN_COIN = pygame.USEREVENT + 2
-pygame.time.set_timer(SPAWN_ENEMY, 1200)
-pygame.time.set_timer(SPAWN_COIN, random.randint(1200, 2600))
-
-road_offset = 0
-
-
-def draw_road(surface, offset):
-    """Draw grass, road, and moving lane separators."""
-    surface.fill((26, 135, 26))
-    pygame.draw.rect(surface, (55, 55, 55), (ROAD_LEFT, 0, ROAD_RIGHT - ROAD_LEFT, SCREEN_H))
-    pygame.draw.line(surface, (245, 245, 245), (ROAD_LEFT, 0), (ROAD_LEFT, SCREEN_H), 4)
-    pygame.draw.line(surface, (245, 245, 245), (ROAD_RIGHT, 0), (ROAD_RIGHT, SCREEN_H), 4)
-
-    lane1_x = ROAD_LEFT + (ROAD_RIGHT - ROAD_LEFT) // 3
-    lane2_x = ROAD_LEFT + 2 * (ROAD_RIGHT - ROAD_LEFT) // 3
-    dash_h = 80
-    gap = 45
-    y = -dash_h + offset
-    while y < SCREEN_H:
-        pygame.draw.rect(surface, (240, 240, 120), (lane1_x - 4, y, 8, dash_h))
-        pygame.draw.rect(surface, (240, 240, 120), (lane2_x - 4, y, 8, dash_h))
-        y += dash_h + gap
+IMG_DIR = Path(__file__).resolve().parent / "img"  # resolve images from this file, not from the current shell folder
 
 
-def draw_hud(surface, score_value, coin_value):
-    """Draw top HUD with score and collected coin count."""
-    pygame.draw.rect(surface, (15, 15, 18), (0, 0, SCREEN_W, 54))
-    score_surf = hud_font.render(f"Score: {score_value}", True, (255, 255, 255))
-    surface.blit(score_surf, (14, 8))
+def load_car_image(filename, fallback_filename=None):
+    # Load the requested image from the racer/img folder.
+    image_path = IMG_DIR / filename
+    if image_path.exists():
+        return pygame.image.load(str(image_path)).convert_alpha()
 
-    coin_surf = hud_font.render(f"Coins: {coin_value}", True, (255, 225, 80))
-    coin_rect = coin_surf.get_rect(topright=(SCREEN_W - 14, 8))
-    surface.blit(coin_surf, coin_rect)
+    # If the exact file is missing, use the fallback image if present.
+    if fallback_filename is not None:
+        fallback_path = IMG_DIR / fallback_filename
+        if fallback_path.exists():
+            return pygame.image.load(str(fallback_path)).convert_alpha()
 
+    # Final fallback keeps the game runnable even if assets are absent.
+    surface = pygame.Surface((CAR_W, CAR_H), pygame.SRCALPHA)
+    surface.fill((220, 30, 30))
+    return surface
+
+
+# load car images and resize them to the car size
+player_img = load_car_image("red_car.png", "pngegg.png")
+player_img = pygame.transform.smoothscale(player_img, (CAR_W, CAR_H))
+enemy_img = load_car_image("blue_car.png")
+enemy_img = pygame.transform.smoothscale(enemy_img, (CAR_W, CAR_H))
+# flip the enemy 180° so its front points down (toward the player)
+enemy_img = pygame.transform.rotate(enemy_img, 180)
+player_x = WIDTH // 2 - CAR_W // 2           # start the car centered horizontally
+player_y = HEIGHT - CAR_H - 20               # place the car near the bottom of the screen
+player_speed = 5                             # how many pixels the car moves per frame
+
+# enemy car settings
+enemy_w, enemy_h = 50, 80                    # size of the enemy car
+enemy_x = random.randint(60, WIDTH - 60 - enemy_w)  # random x on the road (60 is the grass margin)
+enemy_y = -enemy_h                           # start above the screen so it falls down
+enemy_speed = 5                              # how fast the enemy moves down
+
+# coin settings
+coin_r = 12                                  # radius of the coin circle
+coin_x = random.randint(60, WIDTH - 60)      # random x inside the road area
+coin_y = -200                                # start above the screen
+coin_speed = 4                               # how fast the coin falls
+
+coins_collected = 0                          # counter for collected coins
+
+lane_offset = 0                              # offset for the dashed lane line animation
+
+
+def draw_road():
+    screen.fill(GREEN)                                                # fill the background with grass color
+    pygame.draw.rect(screen, GRAY, (50, 0, WIDTH - 100, HEIGHT))      # draw the gray road in the middle
+    # draw dashed white lines on the road center, shifted by lane_offset each frame
+    for y in range(-40, HEIGHT, 40):
+        pygame.draw.rect(screen, WHITE, (WIDTH // 2 - 3, y + lane_offset, 6, 20))
+
+
+def draw_player():
+    screen.blit(player_img, (player_x, player_y))    # draw the blue car image
+
+
+def draw_enemy():
+    screen.blit(enemy_img, (enemy_x, enemy_y))       # draw the red car image
+
+
+def draw_coin():
+    pygame.draw.circle(screen, YELLOW, (coin_x, coin_y), coin_r)      # filled yellow circle
+    pygame.draw.circle(screen, BLACK, (coin_x, coin_y), coin_r, 2)    # thin black outline
+
+
+def draw_score():
+    text = font.render(f"Coins: {coins_collected}", True, WHITE)      # render the counter text
+    rect = text.get_rect(topright=(WIDTH - 10, 10))                   # place it in the top-right corner
+    screen.blit(text, rect)                                           # draw it on the screen
+
+
+def rects_overlap(ax, ay, aw, ah, bx, by, bw, bh):
+    # two rectangles overlap only if they overlap on both x and y axis
+    return ax < bx + bw and ax + aw > bx and ay < by + bh and ay + ah > by
+
+
+running = True                                # main loop flag
+game_over = False                             # becomes True when the player crashes
 
 while running:
+    # handle events like closing the window
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT:         # user clicked the close button
             running = False
 
-        if event.type == SPAWN_ENEMY:
-            enemy_speed = 7 + min(score // 8, 6)
-            enemy_group.add(Enemy(enemy_speed))
+    if not game_over:
+        keys = pygame.key.get_pressed()       # get the state of all keys right now
+        # move left if the left arrow is held and there is still road to the left
+        if keys[pygame.K_LEFT] and player_x > 50:
+            player_x -= player_speed
+        # move right if the right arrow is held and there is still road to the right
+        if keys[pygame.K_RIGHT] and player_x + CAR_W < WIDTH - 50:
+            player_x += player_speed
 
-        if event.type == SPAWN_COIN:
-            coin_group.add(Coin())
-            pygame.time.set_timer(SPAWN_COIN, random.randint(1200, 2600))
+        enemy_y += enemy_speed                # move the enemy car down
+        if enemy_y > HEIGHT:                  # enemy went past the bottom of the screen
+            enemy_y = -enemy_h                # send it back above the screen
+            enemy_x = random.randint(60, WIDTH - 60 - enemy_w)  # pick a new random x
 
-    keys = pygame.key.get_pressed()
-    player_group.sprite.move(keys)
+        coin_y += coin_speed                  # move the coin down
+        if coin_y - coin_r > HEIGHT:          # coin left the screen
+            coin_y = -random.randint(100, 400)            # random y above the screen
+            coin_x = random.randint(60, WIDTH - 60)       # random x on the road
 
-    enemy_group.update()
-    coin_group.update()
-    road_offset = (road_offset + 10) % 125
+        lane_offset += 6                      # shift the dashed lines down a little
+        if lane_offset >= 40:                 # each dash is 40 px tall, so wrap after 40
+            lane_offset = 0
 
-    if pygame.sprite.spritecollide(player_group.sprite, enemy_group, False):
-        running = False
+        # check if the player collided with the enemy car → game over
+        if rects_overlap(player_x, player_y, CAR_W, CAR_H,
+                         enemy_x, enemy_y, enemy_w, enemy_h):
+            game_over = True
 
-    got_coins = pygame.sprite.spritecollide(player_group.sprite, coin_group, True)
-    if got_coins:
-        coins_collected += len(got_coins)
-        score += len(got_coins)
+        # check if the player touched the coin (we use a square around the circle for simplicity)
+        if rects_overlap(player_x, player_y, CAR_W, CAR_H,
+                         coin_x - coin_r, coin_y - coin_r, coin_r * 2, coin_r * 2):
+            coins_collected += 1                         # add one coin to the counter
+            coin_y = -random.randint(100, 400)           # reset coin above the screen
+            coin_x = random.randint(60, WIDTH - 60)      # new random x
 
-    score += 1 / 60
+    # draw everything in order — background first, things on top after
+    draw_road()
+    draw_coin()
+    draw_enemy()
+    draw_player()
+    draw_score()
 
-    draw_road(screen, road_offset)
-    enemy_group.draw(screen)
-    coin_group.draw(screen)
-    player_group.draw(screen)
-    draw_hud(screen, int(score), coins_collected)
+    if game_over:
+        msg = font.render("GAME OVER - press R to restart", True, WHITE)   # message text
+        screen.blit(msg, msg.get_rect(center=(WIDTH // 2, HEIGHT // 2)))    # draw in the middle
+        keys = pygame.key.get_pressed()       # check keys for restart
+        if keys[pygame.K_r]:                  # R → restart
+            game_over = False
+            coins_collected = 0
+            player_x = WIDTH // 2 - CAR_W // 2
+            enemy_y = -enemy_h
 
-    hint = small_font.render("Move: A/D or Left/Right", True, (230, 230, 230))
-    screen.blit(hint, (12, SCREEN_H - 30))
+    pygame.display.flip()                     # push the drawn frame to the screen
+    clock.tick(FPS)                           # wait so we don't run faster than FPS
 
-    pygame.display.update()
-    clock.tick(60)
-
-after_font = pygame.font.Font(None, 56)
-end_text = after_font.render("Game Over", True, (255, 255, 255))
-end_rect = end_text.get_rect(center=(SCREEN_W // 2, SCREEN_H // 2 - 20))
-sub_text = small_font.render("Press ESC or close window", True, (230, 230, 230))
-sub_rect = sub_text.get_rect(center=(SCREEN_W // 2, SCREEN_H // 2 + 30))
-
-waiting = True
-while waiting:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            waiting = False
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            waiting = False
-
-    screen.fill((20, 20, 24))
-    screen.blit(end_text, end_rect)
-    screen.blit(sub_text, sub_rect)
-    pygame.display.update()
-    clock.tick(30)
-
-pygame.quit()
-sys.exit()
+pygame.quit()                                 # clean up pygame when the loop ends
