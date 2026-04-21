@@ -1,97 +1,125 @@
+import random
 import sys
 import pygame
-import random
-from race import Player
-from race import Enemy
-from race import Coin
 
-def show_score(score):
-    score_surf = font.render(f"Score: {score}",False,(255,255,255))
-    score_rect = score_surf.get_rect(center = (360,50))
-    screen.blit(score_surf,score_rect)
+from race import Player, Enemy, Coin, SCREEN_W, SCREEN_H, ROAD_LEFT, ROAD_RIGHT
+
 
 pygame.init()
+pygame.display.set_caption("Racer")
 
-Screen_W = 500
-Screen_H = 900
-
-screen = pygame.display.set_mode((Screen_W,Screen_H))
-
-road_surf = pygame.Surface((350, 900))  # dummy road surface
-road_surf.fill((70, 70, 70))  # lighter gray color for road
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 clock = pygame.time.Clock()
 
-objects = pygame.sprite.Group()               #create sprite groups for each object
-player_group = pygame.sprite.Group()
+hud_font = pygame.font.Font(None, 42)
+small_font = pygame.font.Font(None, 30)
+
+player_group = pygame.sprite.GroupSingle(Player())
+enemy_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
 
-
-player = Player(250,850)
-e = Enemy()
-coin = Coin()
-
-
-objects.add(e)
-player_group.add(player)
-coin_group.add(coin)                            #add them in groups
-
-
 score = 0
-font = pygame.font.Font(None,40)
-
-
+coins_collected = 0
+running = True
 
 SPAWN_ENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(SPAWN_ENEMY, 2000)               #timer fot enemy
-
 SPAWN_COIN = pygame.USEREVENT + 2
-pygame.time.set_timer(SPAWN_COIN, 3600)               #timer for coin
+pygame.time.set_timer(SPAWN_ENEMY, 1200)
+pygame.time.set_timer(SPAWN_COIN, random.randint(1200, 2600))
 
-while True:
+road_offset = 0
+
+
+def draw_road(surface, offset):
+    """Draw grass, road, and moving lane separators."""
+    surface.fill((26, 135, 26))
+    pygame.draw.rect(surface, (55, 55, 55), (ROAD_LEFT, 0, ROAD_RIGHT - ROAD_LEFT, SCREEN_H))
+    pygame.draw.line(surface, (245, 245, 245), (ROAD_LEFT, 0), (ROAD_LEFT, SCREEN_H), 4)
+    pygame.draw.line(surface, (245, 245, 245), (ROAD_RIGHT, 0), (ROAD_RIGHT, SCREEN_H), 4)
+
+    lane1_x = ROAD_LEFT + (ROAD_RIGHT - ROAD_LEFT) // 3
+    lane2_x = ROAD_LEFT + 2 * (ROAD_RIGHT - ROAD_LEFT) // 3
+    dash_h = 80
+    gap = 45
+    y = -dash_h + offset
+    while y < SCREEN_H:
+        pygame.draw.rect(surface, (240, 240, 120), (lane1_x - 4, y, 8, dash_h))
+        pygame.draw.rect(surface, (240, 240, 120), (lane2_x - 4, y, 8, dash_h))
+        y += dash_h + gap
+
+
+def draw_hud(surface, score_value, coin_value):
+    """Draw top HUD with score and collected coin count."""
+    pygame.draw.rect(surface, (15, 15, 18), (0, 0, SCREEN_W, 54))
+    score_surf = hud_font.render(f"Score: {score_value}", True, (255, 255, 255))
+    surface.blit(score_surf, (14, 8))
+
+    coin_surf = hud_font.render(f"Coins: {coin_value}", True, (255, 225, 80))
+    coin_rect = coin_surf.get_rect(topright=(SCREEN_W - 14, 8))
+    surface.blit(coin_surf, coin_rect)
+
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
         if event.type == SPAWN_ENEMY:
-            e = Enemy()
-            objects.add(e)
+            enemy_speed = 7 + min(score // 8, 6)
+            enemy_group.add(Enemy(enemy_speed))
 
         if event.type == SPAWN_COIN:
-            c = Coin()
-            coin_group.add(c)
+            coin_group.add(Coin())
+            pygame.time.set_timer(SPAWN_COIN, random.randint(1200, 2600))
 
-    # Smooth movement
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_d] and player.rect.x < Screen_W - 100:
-        player.rect.x += 5
-    if keys[pygame.K_a] and player.rect.x > 0:
-        player.rect.x -= 5
+    player_group.sprite.move(keys)
 
-    rand = random.randint(100,400)
-
-    screen.fill((0,180,0))
-    screen.blit(road_surf,(75,0))
-
-
-    objects.update()
-    objects.draw(screen)
-    player_group.draw(screen)
+    enemy_group.update()
     coin_group.update()
+    road_offset = (road_offset + 10) % 125
+
+    if pygame.sprite.spritecollide(player_group.sprite, enemy_group, False):
+        running = False
+
+    got_coins = pygame.sprite.spritecollide(player_group.sprite, coin_group, True)
+    if got_coins:
+        coins_collected += len(got_coins)
+        score += len(got_coins)
+
+    score += 1 / 60
+
+    draw_road(screen, road_offset)
+    enemy_group.draw(screen)
     coin_group.draw(screen)
+    player_group.draw(screen)
+    draw_hud(screen, int(score), coins_collected)
 
-    show_score(score)
-
-    if player.check_collisions(objects):                 #what happens when collide with enemy
-        pygame.quit()
-        sys.exit()
-
-    if player.check_collisions_coin(coin_group):                 #what happens when collide with coin
-        score += 1
-
-    
-    
-
+    hint = small_font.render("Move: A/D or Left/Right", True, (230, 230, 230))
+    screen.blit(hint, (12, SCREEN_H - 30))
 
     pygame.display.update()
     clock.tick(60)
+
+after_font = pygame.font.Font(None, 56)
+end_text = after_font.render("Game Over", True, (255, 255, 255))
+end_rect = end_text.get_rect(center=(SCREEN_W // 2, SCREEN_H // 2 - 20))
+sub_text = small_font.render("Press ESC or close window", True, (230, 230, 230))
+sub_rect = sub_text.get_rect(center=(SCREEN_W // 2, SCREEN_H // 2 + 30))
+
+waiting = True
+while waiting:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            waiting = False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            waiting = False
+
+    screen.fill((20, 20, 24))
+    screen.blit(end_text, end_rect)
+    screen.blit(sub_text, sub_rect)
+    pygame.display.update()
+    clock.tick(30)
+
+pygame.quit()
+sys.exit()
