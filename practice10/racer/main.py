@@ -17,7 +17,8 @@ Screen_H = 900
 
 screen = pygame.display.set_mode((Screen_W,Screen_H))
 
-road_surf = pygame.image.load('racer/img/road.webp').convert_alpha()
+road_surf = pygame.Surface((350, 900))  # dummy road surface
+road_surf.fill((70, 70, 70))  # lighter gray color for road
 clock = pygame.time.Clock()
 
 objects = pygame.sprite.Group()               #create sprite groups for each object
@@ -52,9 +53,6 @@ while True:
             pygame.quit()
             sys.exit()
 
-        if event.type == pygame.KEYDOWN:
-            player.move(event)
-
         if event.type == SPAWN_ENEMY:
             e = Enemy()
             objects.add(e)
@@ -63,9 +61,16 @@ while True:
             c = Coin()
             coin_group.add(c)
 
+    # Smooth movement
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_d] and player.rect.x < Screen_W - 100:
+        player.rect.x += 5
+    if keys[pygame.K_a] and player.rect.x > 0:
+        player.rect.x -= 5
+
     rand = random.randint(100,400)
 
-    screen.fill((0,130,0))
+    screen.fill((0,180,0))
     screen.blit(road_surf,(75,0))
 
 
