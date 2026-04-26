@@ -28,6 +28,8 @@ python3 TSIS/TSIS1/phonebook.py
 
 - Search contacts by name, email, or phone
 - Filter contacts by group
+- Add a new contact
+- Add a phone number to an existing contact
 - Add phones and move contacts between groups
 - Import from CSV and JSON
 - Export contacts to JSON
