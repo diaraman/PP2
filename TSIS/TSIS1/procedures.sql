@@ -46,7 +46,23 @@ END;
 $$;
 
 
--- 3. Search contacts by name, email, or any phone number
+-- 3. Delete a contact and all of its phones
+CREATE OR REPLACE PROCEDURE delete_contact(p_name VARCHAR)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_contact_id INTEGER;
+BEGIN
+    SELECT id INTO v_contact_id FROM contacts WHERE name = p_name;
+    IF v_contact_id IS NULL THEN
+        RAISE EXCEPTION 'Contact "%" not found', p_name;
+    END IF;
+
+    DELETE FROM contacts WHERE id = v_contact_id;
+END;
+$$;
+
+
+-- 4. Search contacts by name, email, or any phone number
 CREATE OR REPLACE FUNCTION search_contacts(p_query TEXT)
 RETURNS TABLE(
     id         INTEGER,
@@ -79,7 +95,7 @@ END;
 $$;
 
 
--- 4. Paginated list of contacts
+-- 5. Paginated list of contacts
 CREATE OR REPLACE FUNCTION get_contacts_paginated(p_limit INT, p_offset INT)
 RETURNS TABLE(
     id         INTEGER,

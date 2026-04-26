@@ -44,10 +44,10 @@ def get_group_id(cur, group_name):
     return row[0] if row else None
 
 
-# Search the database by the user-entered query.
-def search_all():
+# Search the database by any text pattern in name, email, or phone.
+def search_by_pattern():
     # Ask the user for the search text.
-    query = input("Search (name / email / phone): ")
+    query = input("Search by pattern: ")
     # Open a database connection.
     conn = get_connection()
     # Stop immediately if the connection failed.
@@ -73,6 +73,11 @@ def search_all():
     finally:
         # Always close the DB connection.
         conn.close()
+
+
+# Backward-compatible alias for the old menu name.
+def search_all():
+    search_by_pattern()
 
 
 # Show only contacts inside one selected group.
@@ -474,6 +479,42 @@ def move_to_group():
         conn.close()
 
 
+# Delete a contact by name.
+def delete_contact():
+    # Ask for the contact name.
+    name = input("Contact name to delete: ").strip()
+    # Stop if nothing was entered.
+    if not name:
+        print("Name cannot be empty.")
+        return
+
+    # Ask for confirmation before deleting anything.
+    confirm = input(f"Delete '{name}' permanently? [y/N]: ").strip().lower()
+    # Any answer except y means no deletion.
+    if confirm != "y":
+        print("Cancelled.")
+        return
+
+    # Open the DB connection.
+    conn = get_connection()
+    # Stop if connection is unavailable.
+    if not conn: return
+    try:
+        # Call the stored procedure that removes the contact.
+        with conn, conn.cursor() as cur:
+            cur.execute("CALL delete_contact(%s)", (name,))
+        # Save the delete operation.
+        conn.commit()
+        # Tell the user the contact was removed.
+        print(f"Done! Contact '{name}' deleted.")
+    except Exception as e:
+        # Show any deletion error.
+        print(f"Error: {e}")
+    finally:
+        # Always close the connection.
+        conn.close()
+
+
 # Import contacts from a CSV file.
 def import_csv():
     # Ask for the file path, but default to the project CSV.
@@ -733,7 +774,7 @@ def main():
         print("--- MENU ---")
         print("0.  Setup database (run once)")
         print("--- Search & Filter ---")
-        print("1.  Search by name / email / phone")
+        print("1.  Search by pattern")
         print("2.  Filter by group")
         print("3.  Search by email")
         print("4.  Show all contacts (sorted)")
@@ -742,18 +783,19 @@ def main():
         print("6.  Add new contact")
         print("7.  Add phone to existing contact")
         print("8.  Move contact to group")
+        print("9.  Delete contact")
         print("--- Import / Export ---")
-        print("9.  Import from CSV")
-        print("10. Import from JSON")
-        print("11. Export to JSON")
-        print("12. Exit")
+        print("10. Import from CSV")
+        print("11. Import from JSON")
+        print("12. Export to JSON")
+        print("13. Exit")
 
         # Read the menu choice from the user.
         choice = input("\nChoose: ").strip()
 
         # Dispatch the chosen action.
         if   choice == "0":  setup_database()
-        elif choice == "1":  search_all()
+        elif choice == "1":  search_by_pattern()
         elif choice == "2":  filter_by_group()
         elif choice == "3":  search_by_email()
         elif choice == "4":  show_sorted()
@@ -761,10 +803,11 @@ def main():
         elif choice == "6":  add_contact()
         elif choice == "7":  add_phone()
         elif choice == "8":  move_to_group()
-        elif choice == "9":  import_csv()
-        elif choice == "10": import_json()
-        elif choice == "11": export_json()
-        elif choice == "12":
+        elif choice == "9":  delete_contact()
+        elif choice == "10": import_csv()
+        elif choice == "11": import_json()
+        elif choice == "12": export_json()
+        elif choice == "13":
             # Leave the program.
             print("Goodbye!")
             break
