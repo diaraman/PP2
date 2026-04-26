@@ -30,6 +30,18 @@
         "coins": 4
     },
     {
+        "username": "v",
+        "score": 126,
+        "distance": 1592,
+        "coins": 5
+    },
+    {
+        "username": "j",
+        "score": 125,
+        "distance": 1369,
+        "coins": 11
+    },
+    {
         "username": "kjvnrf",
         "score": 90,
         "distance": 5002,
@@ -46,17 +58,5 @@
         "score": 80,
         "distance": 1013,
         "coins": 4
-    },
-    {
-        "username": "nb",
-        "score": 70,
-        "distance": 760,
-        "coins": 5
-    },
-    {
-        "username": "kjvnrf",
-        "score": 60,
-        "distance": 5002,
-        "coins": 3
     }
 ]

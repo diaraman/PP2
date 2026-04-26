@@ -31,3 +31,12 @@ python3 TSIS4/main.py --headless --max-frames 5
 - `R` - restart after game over
 - `Esc` - quit / go back
 - `Q` - quit
+
+## Repository Layout
+
+- `main.py` - app entry point
+- `game.py` - Snake game interface
+- `db.py` - PostgreSQL leaderboard access
+- `config.py` - file paths and shared constants
+- `settings.json` - saved preferences
+- `leaderboard.json` - local leaderboard cache
