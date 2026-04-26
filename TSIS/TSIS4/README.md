@@ -42,3 +42,5 @@ python3 TSIS4/main.py --headless --max-frames 5
 - `leaderboard.json` - local leaderboard cache
 
 This layout matches the TSIS4 assignment structure and keeps the game files split by responsibility.
+
+Folder marker: 4
