@@ -31,6 +31,13 @@ This repository contains Python example codes covering fundamental topics from W
 - [practice10](practice10/README.md)
 - [practice11](practice11/README.md)
 
+## TSIS
+
+- [TSIS1](TSIS/TSIS1)
+- [TSIS2](TSIS/TSIS2)
+- [TSIS3](TSIS/TSIS3)
+- [TSIS4](TSIS/TSIS4/README.md)
+
 ---
 
 **Author:** Bagitov  
