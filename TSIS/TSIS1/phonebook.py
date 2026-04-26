@@ -1,4 +1,3 @@
-import psycopg2
 import csv
 import json
 import os

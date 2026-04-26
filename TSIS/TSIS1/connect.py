@@ -1,6 +1,10 @@
-import psycopg2
 from pathlib import Path
 from config import load_config
+
+try:
+    import psycopg2
+except ImportError:  # pragma: no cover - runtime dependency guard
+    psycopg2 = None
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -9,6 +13,10 @@ BASE_DIR = Path(__file__).resolve().parent
 def get_connection():
     # This helper opens a brand-new database connection each time it is called.
     # The app uses it for short tasks so it does not keep one connection forever.
+    if psycopg2 is None:
+        print("Missing dependency: install psycopg2-binary with `pip install -r TSIS/TSIS1/requirements.txt`.")
+        return None
+
     try:
         return psycopg2.connect(**load_config())
     except Exception as error:
@@ -25,50 +33,19 @@ def setup_database():
     # It creates tables first, then seeds default groups, then loads SQL helpers.
     conn = None
     try:
+        if psycopg2 is None:
+            print("Missing dependency: install psycopg2-binary with `pip install -r TSIS/TSIS1/requirements.txt`.")
+            return
+
         conn = psycopg2.connect(**load_config())
         cur = conn.cursor()
 
-        # Step 1: create the groups table so contacts can belong to a category.
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS groups (
-                id   SERIAL PRIMARY KEY,
-                name VARCHAR(50) UNIQUE NOT NULL
-            )
-        """)
-
-        # Step 2: insert a few default groups so the menu has something to use immediately.
-        cur.execute("""
-            INSERT INTO groups (name)
-            VALUES ('Family'), ('Work'), ('Friend'), ('Other')
-            ON CONFLICT (name) DO NOTHING
-        """)
-
-        # Step 3: create the main contacts table with the basic person info.
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS contacts (
-                id       SERIAL PRIMARY KEY,
-                name     VARCHAR(255) NOT NULL UNIQUE,
-                email    VARCHAR(100),
-                birthday DATE,
-                group_id INTEGER REFERENCES groups(id)
-            )
-        """)
-
-        # Step 4: create the phones table because one contact can have many numbers.
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS phones (
-                id         SERIAL PRIMARY KEY,
-                contact_id INTEGER REFERENCES contacts(id) ON DELETE CASCADE,
-                phone      VARCHAR(20) NOT NULL,
-                type       VARCHAR(10) CHECK (type IN ('home', 'work', 'mobile'))
-            )
-        """)
-
-        # Step 5: load stored procedures and helper SQL if the file exists.
-        procedures_path = BASE_DIR / "procedures.sql"
-        if procedures_path.exists():
-            with procedures_path.open('r', encoding='utf-8') as f:
-                cur.execute(f.read())
+        # Load schema and server-side logic from SQL files in this folder.
+        for sql_name in ("schema.sql", "procedures.sql"):
+            sql_path = BASE_DIR / sql_name
+            if sql_path.exists():
+                with sql_path.open("r", encoding="utf-8") as f:
+                    cur.execute(f.read())
 
         conn.commit()
         # Commit makes all created tables and seeded rows permanent.

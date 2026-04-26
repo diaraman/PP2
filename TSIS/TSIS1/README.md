@@ -22,7 +22,7 @@ python3 TSIS/TSIS1/phonebook.py
 ## First-time setup
 
 1. Make sure the database settings in `config.py` match your local PostgreSQL user.
-2. Run the app and choose `0` to create the tables and load `procedures.sql`.
+2. Run the app and choose `0` to create the tables and load `schema.sql` and `procedures.sql`.
 
 ## Features
 
