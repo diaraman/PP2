@@ -1,6 +1,9 @@
 import psycopg2
-import os
+from pathlib import Path
 from config import load_config
+
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 def get_connection():
@@ -62,8 +65,9 @@ def setup_database():
         """)
 
         # Step 5: load stored procedures and helper SQL if the file exists.
-        if os.path.exists('procedures.sql'):
-            with open('procedures.sql', 'r', encoding='utf-8') as f:
+        procedures_path = BASE_DIR / "procedures.sql"
+        if procedures_path.exists():
+            with procedures_path.open('r', encoding='utf-8') as f:
                 cur.execute(f.read())
 
         conn.commit()

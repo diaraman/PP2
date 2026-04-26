@@ -2,7 +2,10 @@ import psycopg2
 import csv
 import json
 import os
+from pathlib import Path
 from connect import get_connection, setup_database
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # ─────────────────────────────────────────
@@ -301,7 +304,7 @@ def move_to_group():
 # 8. Import from CSV (with new fields)
 # ─────────────────────────────────────────
 def import_csv():
-    filepath = input("CSV file path [contacts.csv]: ").strip() or "contacts.csv"
+    filepath = input(f"CSV file path [{BASE_DIR / 'contacts.csv'}]: ").strip() or str(BASE_DIR / "contacts.csv")
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")
         return
@@ -359,7 +362,7 @@ def import_csv():
 #    On duplicate: ask skip or overwrite
 # ─────────────────────────────────────────
 def import_json():
-    filepath = input("JSON file path [contacts_export.json]: ").strip() or "contacts_export.json"
+    filepath = input(f"JSON file path [{BASE_DIR / 'contacts_export.json'}]: ").strip() or str(BASE_DIR / "contacts_export.json")
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")
         return
@@ -429,7 +432,7 @@ def import_json():
 # 10. Export all contacts to JSON
 # ─────────────────────────────────────────
 def export_json():
-    filepath = input("Save as [contacts_export.json]: ").strip() or "contacts_export.json"
+    filepath = input(f"Save as [{BASE_DIR / 'contacts_export.json'}]: ").strip() or str(BASE_DIR / "contacts_export.json")
 
     conn = get_connection()
     if not conn: return

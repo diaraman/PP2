@@ -33,7 +33,7 @@ This repository contains Python example codes covering fundamental topics from W
 
 ## TSIS
 
-- [TSIS1](TSIS/TSIS1)
+- [TSIS1](TSIS/TSIS1/README.md)
 - [TSIS2](TSIS/TSIS2)
 - [TSIS3](TSIS/TSIS3)
 - [TSIS4](TSIS/TSIS4/README.md)
