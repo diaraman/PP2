@@ -1,0 +1,62 @@
+[
+  {
+    "username": "Player",
+    "score": 19,
+    "level_reached": 7,
+    "played_at": "2026-04-27 10:52:59"
+  },
+  {
+    "username": "Player",
+    "score": 16,
+    "level_reached": 6,
+    "played_at": "2026-04-27 10:47:56"
+  },
+  {
+    "username": "Player",
+    "score": 13,
+    "level_reached": 5,
+    "played_at": "2026-04-27 10:56:02"
+  },
+  {
+    "username": "Player",
+    "score": 7,
+    "level_reached": 3,
+    "played_at": "2026-04-27 10:55:08"
+  },
+  {
+    "username": "Player",
+    "score": 6,
+    "level_reached": 3,
+    "played_at": "2026-04-27 10:59:27"
+  },
+  {
+    "username": "Player",
+    "score": 6,
+    "level_reached": 3,
+    "played_at": "2026-04-27 10:59:37"
+  },
+  {
+    "username": "Player",
+    "score": 5,
+    "level_reached": 2,
+    "played_at": "2026-04-27 10:55:20"
+  },
+  {
+    "username": "Player",
+    "score": 3,
+    "level_reached": 2,
+    "played_at": "2026-04-27 11:04:48"
+  },
+  {
+    "username": "Player",
+    "score": 2,
+    "level_reached": 1,
+    "played_at": "2026-04-27 10:58:55"
+  },
+  {
+    "username": "Playeradwa",
+    "score": 2,
+    "level_reached": 1,
+    "played_at": "2026-04-27 11:06:28"
+  }
+]
