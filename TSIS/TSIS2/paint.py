@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import sys
+from pathlib import Path
 
 import pygame
 
@@ -226,7 +227,7 @@ def handle_keydown(event: pygame.event.Event) -> None:
     global active_tool, active_size, active_color, text_mode, text_input
 
     if event.mod & pygame.KMOD_CTRL and event.key == pygame.K_s:
-        path = save_canvas(canvas)
+        path = save_canvas(canvas, Path("."))
         print(f"Saved: {path}")
         return
 
@@ -255,7 +256,7 @@ def handle_mouse_down(event: pygame.event.Event) -> None:
         canvas.fill(CANVAS_BG)
         return
     if save_button and save_button.collidepoint(pos):
-        path = save_canvas(canvas)
+        path = save_canvas(canvas, Path("."))
         print(f"Saved: {path}")
         return
 
