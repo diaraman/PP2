@@ -17,6 +17,20 @@ This repository contains Python example codes covering fundamental topics from W
 
 - [W3Schools Python Tutorial](https://www.w3schools.com/python/)
 
+## Practices
+
+- [practice01](practice01/python-basics/README.md)
+- [practice02](practice02)
+- [practice03](practice03)
+- [practice04](practice04)
+- [practice05](practice05)
+- [practice06](practice06)
+- [Practice7](Practice7)
+- [Practice8](Practice8)
+- [practice09](practice09/README.md)
+- [practice10](practice10/README.md)
+- [practice11](practice11/README.md)
+
 ---
 
 **Author:** Bagitov  

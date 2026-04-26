@@ -8,6 +8,7 @@ import pygame
 
 
 CANVAS_BG = (255, 255, 255)
+ROOT = Path(__file__).resolve().parent
 
 PALETTE = [
     (20, 20, 20),
@@ -72,7 +73,7 @@ def flood_fill(surface: pygame.Surface, start_pos: tuple[int, int], new_color: t
         queue.append((px, py - 1))
 
 
-def save_canvas(surface: pygame.Surface, folder: Path | str = ".") -> Path:
+def save_canvas(surface: pygame.Surface, folder: Path | str = ROOT) -> Path:
     folder_path = Path(folder)
     folder_path.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")

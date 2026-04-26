@@ -15,13 +15,13 @@ This version includes:
 ## Run
 
 ```bash
-python3 TSIS4/main.py
+python3 practice11/main.py
 ```
 
 Smoke test:
 
 ```bash
-python3 TSIS4/main.py --headless --max-frames 5
+python3 practice11/main.py --headless --max-frames 5
 ```
 
 ## Controls
@@ -31,3 +31,8 @@ python3 TSIS4/main.py --headless --max-frames 5
 - `R` - restart after game over
 - `Esc` - quit / go back
 - `Q` - quit
+
+## Notes
+
+- The game runs with `pygame`
+- Use `--headless` for CI or local smoke checks without opening a window
