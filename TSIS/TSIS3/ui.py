@@ -207,8 +207,8 @@ class UIManager:
             self.screen.blit(title, title_rect)
             
             # Headers
-            headers = ["RANK", "NAME", "SCORE", "DISTANCE", "COINS"]
-            header_x = [50, 150, 350, 500, 650]
+            headers = ["RANK", "NAME", "SCORE", "DISTANCE"]
+            header_x = [70, 170, 390, 560]
             for i, header in enumerate(headers):
                 header_text = self.small_font.render(header, True, (255, 255, 0))
                 self.screen.blit(header_text, (header_x[i], 100))
@@ -225,13 +225,11 @@ class UIManager:
                 name_text = self.small_font.render(entry.get('username', 'Unknown')[:15], True, color)
                 score_text = self.small_font.render(str(entry.get('score', 0)), True, color)
                 dist_text = self.small_font.render(str(entry.get('distance', 0)), True, color)
-                coins_text = self.small_font.render(str(entry.get('coins', 0)), True, color)
                 
-                self.screen.blit(rank_text, (70, y_offset))
-                self.screen.blit(name_text, (150, y_offset))
-                self.screen.blit(score_text, (370, y_offset))
-                self.screen.blit(dist_text, (520, y_offset))
-                self.screen.blit(coins_text, (660, y_offset))
+                self.screen.blit(rank_text, (80, y_offset))
+                self.screen.blit(name_text, (170, y_offset))
+                self.screen.blit(score_text, (400, y_offset))
+                self.screen.blit(dist_text, (570, y_offset))
                 
                 y_offset += 35
                 if y_offset > 480:

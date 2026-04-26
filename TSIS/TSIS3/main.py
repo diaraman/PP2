@@ -8,7 +8,11 @@ class Game:
     def __init__(self):
         # Pygame setup happens once at the top level of the app.
         pygame.init()
-        pygame.mixer.init()
+        try:
+            pygame.mixer.init()
+        except pygame.error:
+            # Audio is optional, so the game keeps running if sound is unavailable.
+            pass
         
         self.screen = pygame.display.set_mode((800, 600))
         pygame.display.set_caption("TSIS 3 - Advanced Racer Game")

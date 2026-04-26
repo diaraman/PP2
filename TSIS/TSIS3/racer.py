@@ -506,17 +506,17 @@ class RacerGame:
             
     def update_powerup(self):
         if self.active_powerup:
+            if self.active_powerup == "shield":
+                return
             self.powerup_timer -= 1
             if self.powerup_timer <= 0:
                 if self.active_powerup == "nitro":
                     self.speed = self.base_speed
                     self.nitro_multiplier = 1.0
-                elif self.active_powerup == "shield":
-                    self.shield_active = False
                 self.active_powerup = None
                 
     def apply_powerup(self, powerup):
-        if self.active_powerup and self.active_powerup != "repair":
+        if self.active_powerup:
             return
             
         if powerup.type == "nitro":
@@ -525,18 +525,23 @@ class RacerGame:
             self.nitro_multiplier = 2.0
             self.speed = self.base_speed * self.nitro_multiplier
             self.score += 50
+            self.message = "Picked up Nitro"
             
         elif powerup.type == "shield":
             self.active_powerup = "shield"
-            self.powerup_timer = 360
+            self.powerup_timer = -1
             self.shield_active = True
             self.score += 30
+            self.message = "Picked up Shield"
             
         elif powerup.type == "repair":
             if self.obstacles:
-                removed = self.obstacles.pop(0)
+                # Remove the obstacle closest to the player so repair feels immediate.
+                closest_obstacle = max(self.obstacles, key=lambda item: item.y)
+                self.obstacles.remove(closest_obstacle)
                 self.score += 20
             self.speed = self.base_speed * self.nitro_multiplier
+            self.message = "Picked up Repair"
             
     def check_collisions(self):
         player_rect = self.player.get_rect()
@@ -551,27 +556,36 @@ class RacerGame:
                         continue
                 if not self.shield_active:
                     return True
-                else:
-                    self.traffic.remove(traffic)
-                    self.shield_active = False
-                    self.active_powerup = None
-                    self.score -= 20
+                # Shield absorbs the hit, removes the car, and is consumed.
+                self.traffic.remove(traffic)
+                self.shield_active = False
+                self.active_powerup = None
+                self.powerup_timer = 0
+                self.score -= 20
                     
         for obstacle in self.obstacles[:]:
             if player_rect.colliderect(obstacle.get_rect()):
-                # Применяем эффекты препятствия
+                if self.shield_active:
+                    # Shield blocks the obstacle completely and is consumed.
+                    self.obstacles.remove(obstacle)
+                    self.shield_active = False
+                    self.active_powerup = None
+                    self.powerup_timer = 0
+                    self.score += 5
+                    continue
+
+                # Apply the normal obstacle effects when no shield is active.
                 self.score -= obstacle.damage
                 self.speed = max(2, self.speed * obstacle.slow)
-                
-                # Дополнительные эффекты для особых препятствий
+
+                # Extra effects for special obstacles.
                 if obstacle.type == "ice":
-                    self.speed = max(1, self.speed * 0.5)  # Лед сильно замедляет
+                    self.speed = max(1, self.speed * 0.5)  # Ice slows you down hard
                 elif obstacle.type == "spikes":
-                    if not self.shield_active:
-                        return True  # Шипы пробивают шины
+                    return True  # Spikes can end the run
                 elif obstacle.type == "hole":
-                    self.score -= 50  # Яма наносит большой урон
-                    
+                    self.score -= 50  # Hole causes extra damage
+
                 self.obstacles.remove(obstacle)
                 
         for coin in self.coins[:]:
@@ -754,10 +768,19 @@ class RacerGame:
             powerup_panel.fill((0, 0, 0))
             self.screen.blit(powerup_panel, (10, 210))
             
-            powerup_text = self.small_font.render(f"{self.active_powerup.upper()}", True, (0, 255, 0))
+            powerup_name_map = {
+                "nitro": "NITRO",
+                "shield": "SHIELD",
+                "repair": "REPAIR",
+            }
+            powerup_name = powerup_name_map.get(self.active_powerup, self.active_powerup.upper())
+            powerup_text = self.small_font.render(f"{powerup_name}", True, (0, 255, 0))
             self.screen.blit(powerup_text, (20, 220))
-            
-            timer_text = self.small_font.render(f"Time: {self.powerup_timer//60}s", True, (255, 255, 255))
+
+            if self.active_powerup == "shield":
+                timer_text = self.small_font.render("Until hit", True, (255, 255, 255))
+            else:
+                timer_text = self.small_font.render(f"Time: {self.powerup_timer//60}s", True, (255, 255, 255))
             self.screen.blit(timer_text, (20, 245))
             
         instr_text = self.small_font.render("← → Move | SPACE Overtake | ESC Pause", True, (200, 200, 200))

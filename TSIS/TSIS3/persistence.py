@@ -1,11 +1,12 @@
 import json
-import os
+from pathlib import Path
 
 class PersistenceManager:
     def __init__(self):
         # File-based storage keeps the app simple and avoids extra dependencies.
-        self.settings_file = "settings.json"
-        self.leaderboard_file = "leaderboard.json"
+        base_dir = Path(__file__).resolve().parent
+        self.settings_file = base_dir / "settings.json"
+        self.leaderboard_file = base_dir / "leaderboard.json"
         self.default_settings = {
             "sound": True,
             "car_color": "green",
@@ -15,7 +16,7 @@ class PersistenceManager:
     def load_settings(self):
         """Load settings from JSON file"""
         # Load the saved settings, but fall back to defaults if the file is missing or broken.
-        if os.path.exists(self.settings_file):
+        if self.settings_file.exists():
             try:
                 with open(self.settings_file, 'r') as f:
                     settings = json.load(f)
@@ -40,7 +41,7 @@ class PersistenceManager:
     def load_leaderboard(self):
         """Load leaderboard from JSON file"""
         # Leaderboard entries are always sorted with the highest score first.
-        if os.path.exists(self.leaderboard_file):
+        if self.leaderboard_file.exists():
             try:
                 with open(self.leaderboard_file, 'r') as f:
                     leaderboard = json.load(f)
