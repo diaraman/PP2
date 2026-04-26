@@ -479,20 +479,27 @@ def move_to_group():
         conn.close()
 
 
-# Delete a contact by name.
+# Delete one or more contacts by name.
 def delete_contact():
-    # Ask for the contact name.
-    name = input("Contact name to delete: ").strip()
+    # Ask for one or more contact names separated by commas.
+    raw_names = input("Contact names to delete (comma-separated): ").strip()
     # Stop if nothing was entered.
-    if not name:
+    if not raw_names:
         print("Name cannot be empty.")
         return
 
     # Ask for confirmation before deleting anything.
-    confirm = input(f"Delete '{name}' permanently? [y/N]: ").strip().lower()
+    confirm = input(f"Delete {raw_names} permanently? [y/N]: ").strip().lower()
     # Any answer except y means no deletion.
     if confirm != "y":
         print("Cancelled.")
+        return
+
+    # Split the input on commas and remove extra spaces.
+    names = [name.strip() for name in raw_names.split(",") if name.strip()]
+    # Stop if the list ended up empty.
+    if not names:
+        print("No valid names found.")
         return
 
     # Open the DB connection.
@@ -500,13 +507,23 @@ def delete_contact():
     # Stop if connection is unavailable.
     if not conn: return
     try:
-        # Call the stored procedure that removes the contact.
+        # Delete each contact one by one so one bad name does not stop all deletes.
+        deleted = 0
+        missing = []
         with conn, conn.cursor() as cur:
-            cur.execute("CALL delete_contact(%s)", (name,))
+            for name in names:
+                # Try to delete the contact by name and count how many rows were removed.
+                cur.execute("DELETE FROM contacts WHERE name = %s RETURNING id", (name,))
+                if cur.fetchone():
+                    deleted += 1
+                else:
+                    missing.append(name)
         # Save the delete operation.
         conn.commit()
-        # Tell the user the contact was removed.
-        print(f"Done! Contact '{name}' deleted.")
+        # Tell the user what happened.
+        print(f"Done! Deleted {deleted} contact(s).")
+        if missing:
+            print("Not found: " + ", ".join(missing))
     except Exception as e:
         # Show any deletion error.
         print(f"Error: {e}")
@@ -783,7 +800,7 @@ def main():
         print("6.  Add new contact")
         print("7.  Add phone to existing contact")
         print("8.  Move contact to group")
-        print("9.  Delete contact")
+        print("9.  Delete contacts by comma")
         print("--- Import / Export ---")
         print("10. Import from CSV")
         print("11. Import from JSON")

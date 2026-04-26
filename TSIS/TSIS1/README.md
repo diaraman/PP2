@@ -31,6 +31,6 @@ python3 TSIS/TSIS1/phonebook.py
 - Add a new contact
 - Add a phone number to an existing contact
 - Add phones and move contacts between groups
-- Delete contacts
+- Delete one or more contacts by comma-separated name
 - Import from CSV and JSON
 - Export contacts to JSON
