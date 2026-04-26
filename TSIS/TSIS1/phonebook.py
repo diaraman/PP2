@@ -370,13 +370,32 @@ def add_contact():
         with conn, conn.cursor() as cur:
             # Create or find the group first.
             group_id = get_group_id(cur, group_name)
-            # Insert the contact row and get its ID back.
-            cur.execute(
-                "INSERT INTO contacts (name, email, birthday, group_id) VALUES (%s, %s, %s, %s) RETURNING id",
-                (name, email, birthday, group_id)
-            )
-            # Read the new contact ID.
-            contact_id = cur.fetchone()[0]
+            # Check whether a contact with this name already exists.
+            cur.execute("SELECT id FROM contacts WHERE name = %s", (name,))
+            existing = cur.fetchone()
+
+            # If the name already exists, let the user decide what to do.
+            if existing:
+                print(f"Contact '{name}' already exists.")
+                action = input("  [s]kip or [u]pdate? ").strip().lower()
+                if action != "u":
+                    print("Skipped.")
+                    return
+
+                # Update the existing contact instead of inserting a duplicate row.
+                contact_id = existing[0]
+                cur.execute(
+                    "UPDATE contacts SET email = %s, birthday = %s, group_id = %s WHERE id = %s",
+                    (email, birthday, group_id, contact_id)
+                )
+            else:
+                # Insert the contact row and get its ID back.
+                cur.execute(
+                    "INSERT INTO contacts (name, email, birthday, group_id) VALUES (%s, %s, %s, %s) RETURNING id",
+                    (name, email, birthday, group_id)
+                )
+                # Read the new contact ID.
+                contact_id = cur.fetchone()[0]
 
             # Save the first phone number if one was provided.
             if phone:
@@ -385,10 +404,10 @@ def add_contact():
                     (contact_id, phone, phone_type)
                 )
 
-        # Save the new contact in the database.
+        # Save the new or updated contact in the database.
         conn.commit()
-        # Tell the user the contact was created.
-        print(f"Done! Contact '{name}' added.")
+        # Tell the user the contact was created or updated.
+        print(f"Done! Contact '{name}' saved.")
     except Exception as e:
         # Show any insert error.
         print(f"Error: {e}")
