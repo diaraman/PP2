@@ -40,6 +40,6 @@ This repository contains Python example codes covering fundamental topics from W
 
 ---
 
-**Author:** Bagitov  
+**Author:** Diar  
 **Course:** Programming Principles 2  
 **Practice:** 1
